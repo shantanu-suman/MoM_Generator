@@ -1,0 +1,141 @@
+You are an advanced AI assistant responsible for designing and building a Growth Talk Assistant (GTA) system. This system aims to process uploaded .vtt transcript files from manager–employee conversations and output:
+
+Speaker-aware sentiment and tone analysis
+
+Structured Minutes of Meeting (MoM) summaries
+
+Downloadable/email-ready reports
+
+The system should be deployable via a Streamlit web app. Your tasks span model training, design documentation, backend API integration, and front-end development. Please follow the steps below precisely.
+
+🔹 Phase 1: Problem Understanding and Functional Decomposition
+Define the end goal:
+
+Accept .vtt transcript file as input.
+
+Perform utterance-level sentiment (positive, negative, neutral) and tone (e.g., empathetic, assertive) classification.
+
+Generate a structured MoM summarizing:
+
+Key discussion points
+
+Agreed actions
+
+Emotional flow
+
+Tone trends
+
+Present results in a user-friendly Streamlit app UI.
+
+Break down the system into components:
+
+Transcript Parser
+
+Sentiment & Tone Classifier
+
+MoM Generator
+
+Backend APIs (FastAPI)
+
+Streamlit Frontend
+
+🔹 Phase 2: Dataset Design and Model Training
+Sentiment/Tone Dataset Preparation
+
+Use public datasets: MELD, EmotionLines, SAMSum.
+
+Create a simulated dataset of manager–employee growth talk dialogues.
+
+Annotate each utterance with:
+
+Speaker role (Manager or Employee)
+
+Sentiment polarity
+
+Tone tags (assertive, anxious, empathetic, etc.)
+
+Model Training
+
+Use a Transformer-based model (e.g., DistilBERT, RoBERTa) for sentiment and tone classification.
+
+Fine-tune the model using the above datasets.
+
+Evaluate using F1-score, accuracy, precision-recall.
+
+MoM Generator
+
+Use a T5 or BART-based encoder-decoder model.
+
+Fine-tune it on SAMSum and custom annotated summaries from simulated dialogues.
+
+Input: full transcript with speaker and sentiment/tone tags.
+
+Output: structured JSON summary with key points, actions, emotional progression.
+
+🔹 Phase 3: Backend Development (FastAPI)
+Implement FastAPI endpoints:
+
+/upload-transcript: Accept .vtt file and parse utterances.
+
+/analyze: Run the sentiment/tone classifier on utterances.
+
+/generate-summary: Call the MoM generator and return JSON summary.
+
+/download-report: Return a downloadable .txt or .docx report.
+
+Pipeline Flow:
+
+Parse .vtt file ➝ classify utterances ➝ generate summary ➝ return structured result.
+
+🔹 Phase 4: Frontend Streamlit App
+UI Components:
+
+File uploader for .vtt transcript.
+
+Button to trigger analysis.
+
+Display:
+
+Per-utterance sentiment and tone.
+
+Summary card (MoM).
+
+Graphs: sentiment/tone timeline.
+
+Download & Share Options:
+
+Export summary and analysis as .txt, .docx, or .pdf.
+
+Optional: Email integration (SMTP config—not MS Teams).
+
+🔹 Phase 5: Evaluation and Documentation
+Evaluation Metrics:
+
+Classification: Accuracy, F1-Score, Confusion Matrix.
+
+Summarization: ROUGE, BLEU scores + human evaluation.
+
+Documentation Deliverables:
+
+Detailed Design Document (DDD) including:
+
+Data pipeline architecture
+
+Model selection rationale
+
+Training setup
+
+Evaluation metrics
+
+User Manual
+
+Deployment and setup guide (Docker optional)
+
+🔹 Constraints & Notes
+Do not integrate with Microsoft Teams API (only .vtt transcript input).
+
+All components should run locally or via public cloud, ensuring modularity.
+
+Ensure speaker separation (Manager vs Employee) is preserved in outputs.
+
+Ensure reproducibility (save model checkpoints, preprocessing scripts).
