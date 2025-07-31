@@ -7,6 +7,7 @@ The Growth Talk Assistant is a Streamlit-based web application designed to analy
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Local PC setup: User wants complete instructions for running the system locally with full model training capabilities.
 
 ## System Architecture
 
