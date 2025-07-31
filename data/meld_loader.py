@@ -3,7 +3,7 @@ import requests
 import os
 import zipfile
 import json
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 import numpy as np
 from pathlib import Path
 

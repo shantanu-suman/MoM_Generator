@@ -1,0 +1,30 @@
+{
+  "emotion_map": {
+    "neutral": 0,
+    "joy": 1,
+    "sadness": 2,
+    "anger": 3,
+    "fear": 4,
+    "surprise": 5,
+    "disgust": 6
+  },
+  "sentiment_map": {
+    "negative": 0,
+    "neutral": 1,
+    "positive": 2
+  },
+  "emotion_labels": {
+    "0": "neutral",
+    "1": "joy",
+    "2": "sadness",
+    "3": "anger",
+    "4": "fear",
+    "5": "surprise",
+    "6": "disgust"
+  },
+  "sentiment_labels": {
+    "0": "negative",
+    "1": "neutral",
+    "2": "positive"
+  }
+}
