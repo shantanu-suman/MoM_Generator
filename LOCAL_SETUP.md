@@ -2,7 +2,7 @@
 
 This guide will help you set up and run the Growth Talk Assistant on your local PC with full AI model training capabilities.
 
-## 📋 Prerequisites
+## Prerequisites
 
 ### System Requirements
 - **Python**: 3.8 or higher
@@ -17,7 +17,7 @@ python --version
 python3 --version
 ```
 
-## 🚀 Step-by-Step Setup
+## Step-by-Step Setup
 
 ### 1. Download the Project
 Download all project files to your local machine. The project structure should look like:
@@ -82,7 +82,7 @@ address = "0.0.0.0"
 port = 8501' > .streamlit/config.toml
 ```
 
-## 🤖 Model Training Process
+## Model Training Process
 
 ### Step 1: Train the Models
 Run the complete training pipeline:
@@ -116,7 +116,7 @@ After training completes, you should see:
 └── synthetic/                 # Generated growth talk data
 ```
 
-## 🏃 Running the Application
+## Running the Application
 
 ### Start the Streamlit App
 ```bash
@@ -135,7 +135,7 @@ Network URL: http://192.168.x.x:8501
 2. Go to `http://localhost:8501`
 3. You'll see the Growth Talk Assistant interface
 
-## 🧪 Testing the Application
+## Testing the Application
 
 ### Sample VTT File for Testing
 Create a test file `sample_meeting.vtt`:
@@ -167,7 +167,7 @@ Manager: That's perfectly reasonable. Let's discuss how we can support you bette
    - Generated Minutes of Meeting
    - Downloadable reports
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues and Solutions
 
@@ -209,7 +209,7 @@ texts, emotion_labels, sentiment_labels = meld_loader.prepare_training_data('tra
 base_model="distilbert-base-uncased"  # Instead of bert-base-uncased
 ```
 
-## 📊 Understanding the Results
+## Understanding the Results
 
 ### Model Performance Metrics
 After training, check `./models/evaluation_report.txt` for:
@@ -222,7 +222,7 @@ After training, check `./models/evaluation_report.txt` for:
 - **Tone Classification**: 60-75% accuracy
 - **Training Time**: 30-60 minutes on modern CPU
 
-## 🔄 Retraining Models
+## Retraining Models
 
 To retrain with new data:
 ```bash
@@ -233,7 +233,7 @@ rm -rf ./models/trained_*
 python train_models.py
 ```
 
-## 📁 Project Structure After Setup
+## Project Structure After Setup
 ```
 growth-talk-assistant/
 ├── .streamlit/config.toml     # Streamlit configuration
@@ -253,7 +253,7 @@ growth-talk-assistant/
 └── sample_meeting.vtt       # Test file
 ```
 
-## 🚀 Next Steps
+## Next Steps
 
 1. **Complete Setup**: Follow all installation steps
 2. **Train Models**: Run the training pipeline
@@ -261,7 +261,7 @@ growth-talk-assistant/
 4. **Customize**: Modify models for your specific use case
 5. **Deploy**: Consider cloud deployment for team access
 
-## 💡 Tips for Success
+## Tips for Success
 
 - **First Run**: Start with the sample VTT file to verify everything works
 - **GPU Training**: If you have an NVIDIA GPU, install `torch` with CUDA support for faster training

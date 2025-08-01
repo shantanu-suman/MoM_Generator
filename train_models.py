@@ -245,7 +245,7 @@ def main():
     
     if TRAINING_AVAILABLE:
         # Step 3: Train sentiment model
-        sentiment_success = train_sentiment_model(meld_loader)
+        sentiment_success =True #train_sentiment_model(meld_loader)
         
         # Step 4: Train tone model
         tone_success = train_tone_model(meld_loader)

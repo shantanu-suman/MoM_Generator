@@ -1,0 +1,9 @@
+gta_env/
+models/__pycache__/
+models/evaluation_report.txt
+models/trained_sentiment/
+models/trained_tone/
+log.txt
+data/__pycache__/
+data/synthetic/
+src/__pycache__/
