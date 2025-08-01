@@ -1,6 +1,6 @@
 # Growth Talk Assistant - Local Setup Guide
 
-This guide will help you set up and run the Growth Talk Assistant on your local PC with full AI model training capabilities.
+This guide will help you set up and run the Talk Assistant on your local PC with full AI model training capabilities.
 
 ## Prerequisites
 
