@@ -1,236 +1,187 @@
-import plotly.express as px
+# Professional Conversation Analysis Visualization using Streamlit and Plotly
+
+import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 from typing import List, Dict, Any
 from collections import Counter
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import io
+import base64
+
+# ------------------------- Helper Functions -------------------------
+TONE_COLORS = {
+    "supportive": "#66BB6A",
+    "anxious": "#EF5350",
+    "assertive": "#42A5F5",
+    "confident": "#AB47BC",
+    "empathetic": "#26A69A",
+    "frustrated": "#FF7043",
+    "neutral": "#BDBDBD"
+}
+
+SPEAKER_COLORS = {
+    "Manager": "#1f77b4",
+    "Employee": "#ff7f0e",
+    "Unknown": "#888"
+}
+
+# ------------------------ Visualization Functions ------------------------
+
+def create_summary_cards(stats: Dict[str, Any]):
+    cards = []
+    cards.append(go.Indicator(
+        mode="number",
+        value=stats.get("total_utterances", 0),
+        title={"text": "Total Utterances", "font": {"size": 16}},
+        number={"font": {"size": 26}},
+        domain={"row": 0, "column": 0}
+    ))
+    cards.append(go.Indicator(
+        mode="number",
+        value=stats.get("manager_utterances", 0),
+        title={"text": "Manager Utterances", "font": {"size": 16}},
+        number={"font": {"size": 26}},
+        domain={"row": 0, "column": 1}
+    ))
+    cards.append(go.Indicator(
+        mode="number",
+        value=stats.get("employee_utterances", 0),
+        title={"text": "Employee Utterances", "font": {"size": 16}},
+        number={"font": {"size": 26}},
+        domain={"row": 0, "column": 2}
+    ))
+    cards.append(go.Indicator(
+        mode="gauge+number",
+        value=stats.get("average_sentiment", 0),
+        title={"text": "Average Sentiment (–1 to +1)", "font": {"size": 16}},
+        number={"font": {"size": 24}},
+        gauge={"axis": {"range": [-1, 1]}, "bar": {"color": "#00BFC4"}},
+        domain={"row": 0, "column": 3}
+    ))
+
+    fig = go.Figure(cards)
+    fig.update_layout(
+        grid={"rows": 1, "columns": 4, "pattern": "independent"},
+        template="plotly_white",
+        height=250,
+        margin=dict(l=30, r=30, t=20, b=20),
+        paper_bgcolor="#F0F2F6"
+    )
+    return fig
 
 def create_sentiment_timeline(utterances: List[Dict[str, Any]]):
-    """Create sentiment timeline visualization"""
-    
-    # Prepare data
-    timestamps = []
-    sentiment_scores = []
-    speakers = []
-    texts = []
-    sentiments = []
-    
-    for i, utterance in enumerate(utterances):
-        timestamps.append(i + 1)  # Use sequence number as x-axis
-        sentiment_scores.append(utterance.get('sentiment_score', 0))
-        speakers.append(utterance.get('speaker', 'Unknown'))
-        texts.append(utterance.get('text', '')[:100] + '...' if len(utterance.get('text', '')) > 100 else utterance.get('text', ''))
-        sentiments.append(utterance.get('sentiment', 'neutral'))
-    
-    # Create figure
-    fig = go.Figure()
-    
-    # Add sentiment line
-    fig.add_trace(go.Scatter(
-        x=timestamps,
-        y=sentiment_scores,
+    x = list(range(1, len(utterances)+1))
+    y = [u.get('sentiment_score', 0) for u in utterances]
+    colors = ['green' if s > 0.2 else 'red' if s < -0.2 else 'gray' for s in y]
+    speakers = [u.get('speaker', 'Unknown') for u in utterances]
+    sentiments = [u.get('sentiment', 'neutral') for u in utterances]
+    texts = [u.get('text', '')[:100] + '...' if len(u.get('text', '')) > 100 else u.get('text', '') for u in utterances]
+
+    fig = go.Figure(go.Scatter(
+        x=x,
+        y=y,
         mode='lines+markers',
-        name='Sentiment Score',
-        line=dict(color='blue', width=2),
-        marker=dict(size=6),
-        hovertemplate='<b>Utterance %{x}</b><br>' +
-                      'Speaker: %{customdata[0]}<br>' +
-                      'Sentiment: %{customdata[1]}<br>' +
-                      'Score: %{y:.2f}<br>' +
-                      'Text: %{customdata[2]}<extra></extra>',
-        customdata=list(zip(speakers, sentiments, texts))
+        marker=dict(size=8, color=colors, line=dict(color='white', width=1)),
+        customdata=list(zip(speakers, sentiments, texts)),
+        hovertemplate='<b>Utterance %{x}</b><br>Speaker: %{customdata[0]}<br>Sentiment: %{customdata[1]}<br>Score: %{y:.2f}<br>Text: %{customdata[2]}<extra></extra>'
     ))
-    
-    # Add zero line
-    fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
-    
-    # Add positive/negative zones
-    fig.add_hrect(y0=0, y1=1, fillcolor="green", opacity=0.1, layer="below", line_width=0)
-    fig.add_hrect(y0=-1, y1=0, fillcolor="red", opacity=0.1, layer="below", line_width=0)
-    
-    # Update layout
-    fig.update_layout(
-        title='Sentiment Timeline Throughout Conversation',
-        xaxis_title='Utterance Number',
-        yaxis_title='Sentiment Score',
-        yaxis=dict(range=[-1, 1]),
-        hovermode='x unified',
-        height=400
-    )
-    
+
+    fig.update_layout(title='🧠 Sentiment Timeline', xaxis_title='Utterance #', yaxis_title='Score', yaxis=dict(range=[-1, 1]), height=350)
     return fig
 
 def create_tone_distribution(utterances: List[Dict[str, Any]]):
-    """Create tone distribution pie chart"""
-    
-    tones = [utterance.get('tone', 'neutral') for utterance in utterances]
-    tone_counts = Counter(tones)
-    
-    # Create pie chart
-    fig = go.Figure(data=[go.Pie(
-        labels=list(tone_counts.keys()),
-        values=list(tone_counts.values()),
-        hole=0.3,
-        hovertemplate='<b>%{label}</b><br>' +
-                      'Count: %{value}<br>' +
-                      'Percentage: %{percent}<extra></extra>'
-    )])
-    
-    fig.update_layout(
-        title='Tone Distribution in Conversation',
-        annotations=[dict(text='Tones', x=0.5, y=0.5, font_size=20, showarrow=False)],
-        height=400
-    )
-    
-    return fig
-
-def create_emotional_flow(utterances: List[Dict[str, Any]]):
-    """Create emotional flow heatmap"""
-    
-    # Prepare data for heatmap
-    speakers = ['Manager', 'Employee']
-    tones = ['empathetic', 'assertive', 'anxious', 'confident', 'frustrated', 'supportive']
-    
-    # Count tone-speaker combinations
-    data_matrix = []
-    for speaker in speakers:
-        speaker_row = []
-        speaker_utterances = [u for u in utterances if u.get('speaker') == speaker]
-        speaker_tones = [u.get('tone', 'neutral') for u in speaker_utterances]
-        tone_counts = Counter(speaker_tones)
-        
-        for tone in tones:
-            count = tone_counts.get(tone, 0)
-            speaker_row.append(count)
-        data_matrix.append(speaker_row)
-    
-    # Create heatmap
-    fig = go.Figure(data=go.Heatmap(
-        z=data_matrix,
-        x=tones,
-        y=speakers,
-        colorscale='RdYlBu_r',
-        hoverongaps=False,
-        hovertemplate='Speaker: %{y}<br>Tone: %{x}<br>Count: %{z}<extra></extra>'
+    tones = [u.get('tone', 'neutral') for u in utterances]
+    counts = Counter(tones)
+    tones_sorted = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    fig = go.Figure(go.Bar(
+        x=[t[1] for t in tones_sorted],
+        y=[t[0].capitalize() for t in tones_sorted],
+        orientation='h',
+        marker=dict(color=[TONE_COLORS.get(t[0], '#ccc') for t in tones_sorted]),
+        text=[t[1] for t in tones_sorted],
+        textposition='auto'
     ))
-    
-    fig.update_layout(
-        title='Tone Distribution by Speaker',
-        xaxis_title='Tone',
-        yaxis_title='Speaker',
-        height=300
-    )
-    
+    fig.update_layout(title='🎯 Tone Distribution', xaxis_title='Count', yaxis_title='Tone', height=350)
     return fig
 
 def create_speaker_participation(utterances: List[Dict[str, Any]]):
-    """Create speaker participation chart"""
-    
-    speakers = [utterance.get('speaker', 'Unknown') for utterance in utterances]
-    speaker_counts = Counter(speakers)
-    
-    fig = go.Figure(data=[
-        go.Bar(
-            x=list(speaker_counts.keys()),
-            y=list(speaker_counts.values()),
-            marker_color=['#1f77b4', '#ff7f0e'],
-            hovertemplate='<b>%{x}</b><br>Utterances: %{y}<extra></extra>'
-        )
-    ])
-    
-    fig.update_layout(
-        title='Speaker Participation',
-        xaxis_title='Speaker',
-        yaxis_title='Number of Utterances',
-        height=300
-    )
-    
+    speakers = [u.get('speaker', 'Unknown') for u in utterances]
+    counts = Counter(speakers)
+    fig = go.Figure(go.Pie(
+        labels=list(counts.keys()),
+        values=list(counts.values()),
+        marker_colors=[SPEAKER_COLORS.get(s, '#999') for s in counts.keys()],
+        hole=0.4
+    ))
+    fig.update_layout(title='🗣️ Speaker Participation', height=350)
     return fig
 
 def create_sentiment_by_speaker(utterances: List[Dict[str, Any]]):
-    """Create sentiment comparison by speaker"""
-    
-    # Group by speaker
-    speaker_sentiments = {}
-    for utterance in utterances:
-        speaker = utterance.get('speaker', 'Unknown')
-        sentiment_score = utterance.get('sentiment_score', 0)
-        
-        if speaker not in speaker_sentiments:
-            speaker_sentiments[speaker] = []
-        speaker_sentiments[speaker].append(sentiment_score)
-    
-    # Create box plot
+    data = {}
+    for u in utterances:
+        speaker = u.get('speaker', 'Unknown')
+        data.setdefault(speaker, []).append(u.get('sentiment_score', 0))
+
     fig = go.Figure()
-    
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
-    for i, (speaker, scores) in enumerate(speaker_sentiments.items()):
-        fig.add_trace(go.Box(
-            y=scores,
-            name=speaker,
-            marker_color=colors[i % len(colors)],
-            boxmean='sd'  # Show mean and standard deviation
-        ))
-    
-    fig.update_layout(
-        title='Sentiment Distribution by Speaker',
-        yaxis_title='Sentiment Score',
-        yaxis=dict(range=[-1, 1]),
-        height=400
-    )
-    
+    for i, (speaker, scores) in enumerate(data.items()):
+        fig.add_trace(go.Box(y=scores, name=speaker, marker_color=SPEAKER_COLORS.get(speaker, '#999')))
+
+    fig.update_layout(title='📈 Sentiment by Speaker', yaxis_title='Score', yaxis=dict(range=[-1, 1]), height=350)
     return fig
 
-def create_conversation_metrics_dashboard(analysis_results: Dict[str, Any]):
-    """Create comprehensive metrics dashboard"""
-    
+def create_wordcloud_image(utterances: List[Dict[str, Any]]):
+    text = " ".join([u.get('text', '') for u in utterances])
+    wc = WordCloud(width=700, height=350, background_color='white', colormap='viridis', max_words=100).generate(text)
+    buf = io.BytesIO()
+    plt.figure(figsize=(9, 4.5))
+    plt.imshow(wc, interpolation='bilinear')
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
+    return buf
+
+# ------------------------ Streamlit Dashboard ------------------------
+
+def display_dashboard(analysis_results: Dict[str, Any]):
+    st.set_page_config(page_title="Conversation Dashboard", layout="wide")
+    st.markdown("""
+        <style>
+            .main { background-color: #FAFAFA; }
+            h1, h2, h3 { color: #00BFC4; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.title("📊 Growth Talk Analysis Dashboard")
+    st.markdown("Comprehensive analysis of manager-employee conversation.")
+
     utterances = analysis_results.get('utterances', [])
-    mom_stats = analysis_results.get('mom_summary', {}).get('statistics', {})
-    
-    # Create subplots
-    fig = make_subplots(
-        rows=2, cols=2,
-        subplot_titles=('Sentiment Timeline', 'Tone Distribution', 
-                       'Speaker Participation', 'Sentiment by Speaker'),
-        specs=[[{"secondary_y": False}, {"type": "pie"}],
-               [{"type": "bar"}, {"type": "box"}]]
-    )
-    
-    # Sentiment timeline (top left)
-    timestamps = list(range(1, len(utterances) + 1))
-    sentiment_scores = [u.get('sentiment_score', 0) for u in utterances]
-    
-    fig.add_trace(
-        go.Scatter(x=timestamps, y=sentiment_scores, mode='lines+markers', name='Sentiment'),
-        row=1, col=1
-    )
-    
-    # Tone distribution (top right)
-    tones = [u.get('tone', 'neutral') for u in utterances]
-    tone_counts = Counter(tones)
-    
-    fig.add_trace(
-        go.Pie(labels=list(tone_counts.keys()), values=list(tone_counts.values()), name='Tones'),
-        row=1, col=2
-    )
-    
-    # Speaker participation (bottom left)
-    speakers = [u.get('speaker', 'Unknown') for u in utterances]
-    speaker_counts = Counter(speakers)
-    
-    fig.add_trace(
-        go.Bar(x=list(speaker_counts.keys()), y=list(speaker_counts.values()), name='Participation'),
-        row=2, col=1
-    )
-    
-    # Sentiment by speaker (bottom right)
-    for speaker in set(speakers):
-        speaker_sentiments = [u.get('sentiment_score', 0) for u in utterances if u.get('speaker') == speaker]
-        fig.add_trace(
-            go.Box(y=speaker_sentiments, name=f'{speaker} Sentiment'),
-            row=2, col=2
-        )
-    
-    fig.update_layout(height=800, showlegend=False, title_text="Conversation Analysis Dashboard")
-    
-    return fig
+    stats = analysis_results.get('mom_summary', {}).get('statistics', {})
+
+    st.plotly_chart(create_summary_cards(stats), use_container_width=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(create_sentiment_timeline(utterances), use_container_width=True)
+    with col2:
+        st.plotly_chart(create_tone_distribution(utterances), use_container_width=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.plotly_chart(create_speaker_participation(utterances), use_container_width=True)
+    with col4:
+        st.plotly_chart(create_sentiment_by_speaker(utterances), use_container_width=True)
+
+    st.subheader("☁️ Word Cloud of Conversation")
+    wc_buf = create_wordcloud_image(utterances)
+    st.image(wc_buf, use_container_width=True)
+
+# Example Usage
+# import json
+# with open('analysis_results.json') as f:
+#     data = json.load(f)
+# display_dashboard(data)
